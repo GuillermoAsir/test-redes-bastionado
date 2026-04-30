@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Diseño de redes seguras - UD0601</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --bg-page: #f3f4f6;
+      --bg-card: #ffffff;
+      --bg-hover: #f9fafb;
+      --text-main: #111827;
+      --text-muted: #4b5563;
+      --text-light: #6b7280;
+      --border-color: #e5e7eb;
+      --primary: #534AB7;
+      --primary-hover: #3C3489;
+      --success: #10B981;
+      --success-bg: #ecfdf5;
+      --success-border: #6ee7b7;
+      --success-text: #065f46;
+      --danger: #EF4444;
+      --danger-bg: #fef2f2;
+      --danger-border: #fca5a5;
+      --danger-text: #991b1b;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      margin: 0;
+      padding: 2rem 1rem;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+
+    .quiz-wrap {
+      background: var(--bg-card);
+      width: 100%;
+      max-width: 700px;
+      padding: 2.5rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      height: fit-content;
+    }
+
+    .fade-in { animation: fadeIn 0.3s ease-in-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* --- MENÚ PRINCIPAL --- */
+    .menu-header { text-align: center; margin-bottom: 2rem; }
+    .menu-title { font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
+    .menu-subtitle { font-size: 15px; color: var(--text-light); }
+    
+    .resume-banner { background: #EEEDFE; border: 1px solid #AFA9EC; padding: 1.5rem; border-radius: var(--radius); margin-bottom: 2rem; text-align: center; }
+    .resume-banner p { margin: 0 0 1rem 0; font-weight: 600; color: var(--primary); }
+
+    .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+    .topic-card { background: var(--bg-card); border: 2px solid var(--border-color); border-radius: var(--radius); padding: 20px; cursor: pointer; transition: all 0.2s; text-align: left; position: relative; overflow: hidden; }
+    .topic-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 8px 16px -4px rgba(83, 74, 183, 0.15); }
+    .topic-card-title { font-size: 16px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; padding-right: 20px; }
+    .topic-card-count { font-size: 13px; color: var(--text-light); font-weight: 500; }
+    
+    .card-all { background: var(--primary); border-color: var(--primary); }
+    .card-all .topic-card-title { color: white; }
+    .card-all .topic-card-count { color: rgba(255,255,255,0.8); }
+    .card-all:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+
+    /* --- EXAMEN --- */
+    .quiz-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); }
+    .quiz-title-small { font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
+    .quiz-meta { font-size: 13px; color: var(--text-light); }
+    .q-counter { font-size: 14px; font-weight: 600; color: var(--primary); background: #EEEDFE; padding: 4px 10px; border-radius: 20px; }
+    
+    .progress-bar { height: 6px; background: var(--border-color); border-radius: 3px; margin-bottom: 2rem; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--primary); border-radius: 3px; transition: width 0.4s ease; }
+
+    .topic-badge { display: inline-block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-light); margin-bottom: 12px; }
+    .q-text { font-size: 18px; font-weight: 500; margin-bottom: 1.5rem; line-height: 1.5; }
+
+    .opt-list { display: flex; flex-direction: column; gap: 10px; }
+    .opt-btn { text-align: left; background: var(--bg-card); border: 2px solid var(--border-color); border-radius: var(--radius); padding: 14px 16px; font-size: 15px; color: var(--text-muted); cursor: pointer; line-height: 1.5; transition: all 0.2s; font-family: inherit; font-weight: 500; }
+    .opt-btn:hover:not(:disabled) { border-color: var(--primary); background: var(--bg-hover); color: var(--text-main); }
+    
+    .opt-btn.correct { background: var(--success-bg); border-color: var(--success); color: var(--success-text); }
+    .opt-btn.wrong { background: var(--danger-bg); border-color: var(--danger); color: var(--danger-text); }
+    .opt-btn.disabled-neutral { opacity: 0.6; cursor: default; }
+    .opt-btn:disabled { cursor: default; }
+
+    .feedback { margin-top: 20px; font-size: 14px; padding: 14px 16px; border-radius: var(--radius); line-height: 1.5; font-weight: 500; display: none; }
+    .feedback.show { display: block; animation: fadeIn 0.3s ease; }
+    .feedback.ok { background: var(--success-bg); color: var(--success-text); border: 1px solid var(--success-border); }
+    .feedback.fail { background: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger-border); }
+    .feedback.skipped { background: #f3f4f6; color: #4b5563; border: 1px solid #d1d5db; }
+
+    .nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 2.5rem; gap: 12px; }
+    .nav-group { display: flex; gap: 12px; }
+    
+    .btn { padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit; border: none; display: inline-flex; justify-content: center; align-items: center; text-align: center; }
+    .btn-outline { background: transparent; border: 2px solid var(--border-color); color: var(--text-muted); }
+    .btn-outline:hover:not(:disabled) { background: var(--bg-hover); color: var(--text-main); border-color: #d1d5db; }
+    .btn-primary { background: var(--primary); color: white; border: 2px solid var(--primary); }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); border-color: var(--primary-hover); }
+    .btn-danger { background: transparent; color: var(--danger); border: 2px solid var(--danger-border); }
+    .btn-danger:hover { background: var(--danger-bg); border-color: var(--danger); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* --- RESULTADOS --- */
+    .results { text-align: center; }
+    .score-circle { width: 140px; height: 140px; border-radius: 50%; border: 8px solid var(--primary); display: flex; flex-direction: column; justify-content: center; align-items: center; margin: 0 auto 1.5rem auto; background: white; }
+    .score-num { font-size: 42px; font-weight: 700; color: var(--primary); line-height: 1; }
+    .score-base { font-size: 16px; color: var(--text-light); font-weight: 600; margin-top: 4px; }
+    .results-msg { font-size: 20px; font-weight: 600; color: var(--text-main); margin-bottom: 2rem; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 2.5rem; }
+    .stat-card { background: var(--bg-page); padding: 16px 10px; border-radius: var(--radius); border: 1px solid var(--border-color); }
+    .stat-val { font-size: 24px; font-weight: 700; color: var(--text-main); }
+    .stat-lbl { font-size: 12px; color: var(--text-muted); margin-top: 4px; font-weight: 600; text-transform: uppercase; }
+    .c-ok .stat-val { color: var(--success); }
+    .c-fail .stat-val { color: var(--danger); }
+    .c-skip .stat-val { color: var(--text-light); }
+
+    .action-grid { display: grid; grid-template-columns: 1fr; gap: 12px; max-width: 400px; margin: 0 auto; }
+
+    /* --- RESPONSIVE MOBILE --- */
+    @media (max-width: 600px) {
+      body { padding: 0; background-color: var(--bg-card); }
+      .quiz-wrap { padding: 1.5rem; border-radius: 0; box-shadow: none; min-height: 100vh; display: flex; flex-direction: column; }
+      .quiz-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+      .q-counter { align-self: flex-start; }
+      .nav-row { flex-direction: column-reverse; gap: 12px; margin-top: auto; padding-top: 2rem; }
+      .nav-group { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      #btn-prev, #btn-home { width: 100%; }
+      .btn { padding: 14px 16px; font-size: 15px; } 
+      .stats-grid { grid-template-columns: 1fr 1fr; gap: 16px; } 
+      .menu-grid { grid-template-columns: 1fr; }
+      .resume-banner .nav-group { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="quiz-wrap">
+  
+  <!-- PANTALLA DE MENÚ PRINCIPAL -->
+  <div id="menu-view" style="display:none" class="fade-in">
+    <div class="menu-header">
+      <h1 class="menu-title">Diseño de redes seguras</h1>
+      <div class="menu-subtitle">UD0601 · Selecciona qué quieres repasar</div>
+    </div>
+    
+    <div id="resume-banner" class="resume-banner" style="display:none">
+      <p>⏳ Tienes un examen en curso guardado</p>
+      <div class="nav-group" style="justify-content: center;">
+        <button class="btn btn-primary" onclick="resumeQuiz()">Continuar examen</button>
+        <button class="btn btn-danger" onclick="clearStorageAndShowMenu()">Borrar y empezar de cero</button>
+      </div>
+    </div>
+
+    <div class="menu-grid" id="topics-container">
+      <!-- Se rellenará con JS -->
+    </div>
+  </div>
+
+  <!-- PANTALLA DE EXAMEN -->
+  <div id="quiz-view" style="display:none">
+    <div class="quiz-header">
+      <div>
+        <div class="quiz-title-small">Diseño de redes seguras</div>
+        <div class="quiz-meta" id="current-mode-label">UD0601</div>
+      </div>
+      <div class="q-counter" id="q-counter"></div>
+    </div>
+    
+    <div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
+    
+    <div id="q-area" class="fade-in"></div>
+    
+    <div class="nav-row">
+      <div class="nav-group" style="flex:1;">
+        <button class="btn btn-outline" id="btn-prev" onclick="prevQ()">← Anterior</button>
+        <button class="btn btn-outline" id="btn-home" onclick="goToMenuConfirm()">🏠 Menú</button>
+      </div>
+      <div class="nav-group">
+        <button class="btn btn-outline" id="btn-skip" onclick="skipQ()">Saltar</button>
+        <button class="btn btn-primary" id="btn-next" onclick="nextQ()">Siguiente →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANTALLA DE RESULTADOS -->
+  <div id="results-view" style="display:none" class="fade-in"></div>
+
+</div>
+
+<script>
+// BASE DE DATOS DE PREGUNTAS (Tus 58 preguntas exactas)
+const ALL_Q = [
+  {t:"Principios y fundamentos",q:"¿Qué principio de diseño se conoce como KISS?",opts:["Zero Trust","High Availability","Keep It Simple, Stupid","Quality of Service"],a:2,exp:"KISS significa 'Keep It Simple, Stupid': la red debe ser simple sin perder funcionalidad."},
+  {t:"Principios y fundamentos",q:"¿Qué principio moderno asume que todas las redes son potencialmente hostiles, incluso las internas?",opts:["KISS","High Availability","Zero Trust","QoS"],a:2,exp:"Zero Trust asume que ningún usuario, dispositivo o aplicación es confiable por defecto, ni dentro ni fuera de la red."},
+  {t:"Principios y fundamentos",q:"¿Qué principio de diseño de red permite crecer de forma controlada anticipando necesidades futuras?",opts:["Simplicidad estructural","Escalabilidad","Disponibilidad y redundancia","Documentación y mantenibilidad"],a:1,exp:"La escalabilidad permite que la red crezca de forma controlada a lo largo de su vida útil."},
+  {t:"Principios y fundamentos",q:"¿Qué elemento incluye el principio de disponibilidad y redundancia?",opts:["Uso de cable blindado STP","Filtrado de puertos no utilizados","Enlaces duplicados y rutas de failover","Autenticación multifactor"],a:2,exp:"La disponibilidad requiere enlaces duplicados, dispositivos de alta disponibilidad (HA) y rutas de failover."},
+  {t:"Principios y fundamentos",q:"¿Qué principio establece que la seguridad se construye por capas combinando diferentes medidas y controles?",opts:["Escalabilidad","Zero Trust","Simplicidad estructural","Documentación y mantenibilidad"],a:1,exp:"Zero Trust combina múltiples capas de seguridad y verifica siempre, sin confiar en ningún elemento por defecto."},
+  {t:"Principios y fundamentos",q:"¿Qué es la resiliencia en el contexto de redes?",opts:["La capacidad de crecer controladamente","Seguir prestando servicios y recuperarse rápidamente ante fallos o ataques","Usar cifrado en todas las comunicaciones","Documentar todos los dispositivos"],a:1,exp:"La resiliencia es la cualidad de seguir prestando servicios esenciales y recuperarse ante ciberataques, fallos o interrupciones."},
+  {t:"Principios y fundamentos",q:"¿Qué facilita tener documentación clara y actualizada de la red?",opts:["Aumentar el ancho de banda","Auditorías y respuesta eficaz ante incidentes","Reducir el número de VLANs","Eliminar firewalls internos"],a:1,exp:"La documentación facilita auditorías, inventarios de dispositivos y respuesta más eficaz ante cambios o incidentes."},
+  {t:"Objetivos de seguridad",q:"¿Qué objetivo de seguridad se logra segmentando la red y usando cifrado TLS?",opts:["Integridad","Trazabilidad","Confidencialidad","Autenticidad"],a:2,exp:"La confidencialidad garantiza que la información solo sea accesible por personas autorizadas, mediante segmentación y cifrado en tránsito."},
+  {t:"Objetivos de seguridad",q:"¿Qué objetivo de seguridad se apoya en el uso de algoritmos HASH?",opts:["Confidencialidad","Integridad","Resiliencia","Disponibilidad"],a:1,exp:"La integridad asegura que la información no ha sido alterada, usando algoritmos HASH para verificación."},
+  {t:"Objetivos de seguridad",q:"Para lograr la autenticidad en una red, ¿qué se usa?",opts:["Logs SIEM","QoS","Redundancia física","Certificados digitales TLS/SSL"],a:3,exp:"La autenticidad se consigue con certificados digitales TLS/SSL, portal cautivo e IEEE 802.1X."},
+  {t:"Objetivos de seguridad",q:"¿Qué objetivo busca asegurar que los recursos estén disponibles cuando se necesitan?",opts:["Confidencialidad","Autenticidad","Disponibilidad","Trazabilidad"],a:2,exp:"La disponibilidad garantiza que recursos y servicios estén accesibles, incluyendo resistencia a fallos, ataques o eventos imprevistos."},
+  {t:"Objetivos de seguridad",q:"¿Qué permite conseguir la trazabilidad (Accountability) en una red?",opts:["Cifrar todos los datos en tránsito","Saber quién hizo qué, cuándo y cómo","Segmentar la red en zonas","Aumentar la disponibilidad"],a:1,exp:"La trazabilidad consiste en guardar registros del funcionamiento de la red para saber quién realizó cada acción."},
+  {t:"Objetivos de seguridad",q:"¿Con qué se integra la trazabilidad para el análisis de eventos de red?",opts:["DHCP Snooping","Sistemas SIEM o NDR","IEEE 802.1X","TLS 1.3"],a:1,exp:"La trazabilidad se consigue integrando con sistemas SIEM (Security Information and Event Management) o NDR (Network Detection and Response)."},
+  {t:"Objetivos de seguridad",q:"¿Qué medida contribuye a la resiliencia de una red?",opts:["Uso de algoritmos HASH","Certificados digitales en servidores","Capacidad de funcionar en modo degradado y planes de recuperación","Filtrado de contenido web"],a:2,exp:"La resiliencia incluye funcionar en modo degradado, automatización ante fallos y planes de recuperación ante desastres."},
+  {t:"Modelo OSI",q:"En la capa física del modelo OSI, ¿cuál es un control de seguridad recomendado?",opts:["Listas de control de acceso ACL","Filtrado de puertos","Control de acceso físico a dispositivos de red","Autenticación multifactor"],a:2,exp:"La capa física se protege con control de acceso físico a CPD, armarios RACK y puntos de red del edificio."},
+  {t:"Modelo OSI",q:"¿Qué ataque se produce en la capa de enlace de datos?",opts:["IP spoofing","Port scanning","ARP poisoning","Session hijacking"],a:2,exp:"ARP poisoning (envenenamiento ARP) es un ataque de capa 2 junto con MAC Spoofing y movimientos laterales."},
+  {t:"Modelo OSI",q:"¿Qué medida de la capa de enlace de datos previene ataques de suplantación de ARP?",opts:["DHCP Snooping","VLANs","Inspección dinámica ARP","ACL en routers"],a:2,exp:"La Inspección Dinámica ARP (DAI) previene específicamente la suplantación de ARP y los ataques de envenenamiento."},
+  {t:"Modelo OSI",q:"¿Qué función tiene el DHCP Snooping en la capa de enlace de datos?",opts:["Segmentar la red en subredes","Prevenir ataques de suplantación de identidad o agotamiento de direcciones DHCP","Cifrar el tráfico entre VLANs","Detectar intrusiones en capa 3"],a:1,exp:"DHCP Snooping previene ataques de suplantación de identidad (rogue DHCP) o de agotamiento de direcciones DHCP."},
+  {t:"Modelo OSI",q:"En la capa de red, ¿qué herramienta se usa para el filtrado de tráfico?",opts:["Tokens de sesión","ACL en routers","Port scanning","MAC Spoofing"],a:1,exp:"Las Listas de Control de Acceso (ACL) en routers filtran el tráfico en la capa de red (capa 3)."},
+  {t:"Modelo OSI",q:"¿Qué amenaza es propia de la capa de red?",opts:["MAC Spoofing","ARP poisoning","IP spoofing","Session hijacking"],a:2,exp:"IP spoofing, rutas maliciosas y ataques DDoS son amenazas características de la capa de red."},
+  {t:"Modelo OSI",q:"¿Qué sistema se despliega en la capa de red para detectar y prevenir intrusiones?",opts:["DHCP Snooping","IEEE 802.1X","IDS/IPS","TLS 1.3"],a:2,exp:"Los sistemas IDS/IPS (Intrusion Detection/Prevention Systems) operan en la capa de red."},
+  {t:"Modelo OSI",q:"En la capa de transporte, ¿qué tecnología protege las sesiones de conexión?",opts:["AES","802.1X","SIEM","TLS"],a:3,exp:"TLS (Transport Layer Security) protege las sesiones de conexión en la capa de transporte."},
+  {t:"Modelo OSI",q:"¿Qué ataque es común en la capa de transporte?",opts:["ARP poisoning","MAC Spoofing","Session hijacking","VLAN hopping"],a:2,exp:"Port scanning, session hijacking y flooding son ataques comunes en la capa de transporte."},
+  {t:"Modelo OSI",q:"En la capa de sesión, ¿qué control se aplica para mejorar la seguridad?",opts:["Uso de cable blindado STP","Cierre automático de sesiones inactivas","Filtrado de puertos con ACL","Inspección de paquetes con IPS"],a:1,exp:"Los mecanismos de cierre automático de sesiones inactivas y el control de tokens son controles de la capa de sesión."},
+  {t:"Modelo OSI",q:"¿En qué capa OSI se gestiona el cifrado, compresión y codificación de mensajes?",opts:["Capa de sesión","Capa de aplicación","Capa de presentación","Capa de transporte"],a:2,exp:"La capa de presentación gestiona el formato de los datos, incluyendo cifrado, compresión y codificación."},
+  {t:"Modelo OSI",q:"¿Qué algoritmos de cifrado se recomiendan en la capa de presentación?",opts:["MD5 y DES","AES y RSA-2048","WPA y WEP","OSPF y RIP"],a:1,exp:"Se recomienda el uso de algoritmos fuertes como AES y RSA-2048, junto con TLS 1.3."},
+  {t:"Modelo OSI",q:"Control de seguridad en la capa de aplicación:",opts:["Enrutamiento OSPF","Cable blindado STP","Limitación de MAC por puerto","MFA (autenticación multifactor)"],a:3,exp:"La capa de aplicación se protege con MFA, filtrado de contenido, validación de entradas y revisión de logs."},
+  {t:"Modelo OSI",q:"¿Qué protocolos operan en la capa de aplicación del modelo OSI?",opts:["TCP y UDP","IP y ICMP","HTTP, DNS, FTP, SMTP","ARP y RARP"],a:2,exp:"HTTP, DNS, FTP, SMTP son protocolos de capa 7 (aplicación), donde los atacantes explotan vulnerabilidades lógicas."},
+  {t:"Riesgos corporativos",q:"¿Cuál es un riesgo común de diseño en redes corporativas?",opts:["Exceso de documentación","Visibilidad total","Red plana sin segmentación","Demasiada redundancia"],a:2,exp:"Una red plana sin segmentación permite que todos los dispositivos se comuniquen sin restricciones, facilitando movimientos laterales."},
+  {t:"Riesgos corporativos",q:"¿Qué peligro supone la no separación del tráfico productivo?",opts:["Que la red sea demasiado lenta","Que los usuarios puedan acceder a dispositivos de red de administración","Que se generen demasiados logs","Que fallen los firewalls externos"],a:1,exp:"Sin separación del tráfico, los usuarios pueden acceder a dispositivos de administración que no deberían ver."},
+  {t:"Riesgos corporativos",q:"¿Qué riesgo supone la infraestructura legada u obsoleta?",opts:["Documentación excesiva","Monitoreo total","Segmentación perfecta","Protocolos inseguros sin soporte"],a:3,exp:"Los dispositivos obsoletos usan protocolos inseguros (como WPA), no reciben actualizaciones y suelen estar sin documentar."},
+  {t:"Riesgos corporativos",q:"¿Qué ejemplo ilustra el riesgo de 'puntos ciegos en la monitorización'?",opts:["Una VLAN mal configurada","Un atacante que exfiltra datos por DNS sin que haya logs de peticiones DNS","Un servidor web en la DMZ","Un firewall sin reglas actualizadas"],a:1,exp:"Sin logs de peticiones DNS, un atacante puede exfiltrar datos por DNS sin ser detectado: un punto ciego típico."},
+  {t:"Riesgos corporativos",q:"¿Qué riesgo representan los dispositivos IoT o teléfonos personales en la red corporativa?",opts:["Ninguno si están actualizados","Riesgo elevado si no tienen validación y segmentación adicionales","Solo riesgo si se conectan por WiFi","Riesgo menor comparado con servidores obsoletos"],a:1,exp:"Los dispositivos no autorizados (IoT, móviles personales, portátiles de terceros) representan un riesgo elevado y deben tener validación y segmentación adicionales."},
+  {t:"Riesgos corporativos",q:"¿Qué riesgo suponen las VPNs o túneles SSH creados por empleados sin control del equipo de seguridad?",opts:["Puertas traseras mal documentadas o conexiones no controladas","Exceso de cifrado en la red","Sobrecarga del firewall perimetral","Generación excesiva de logs"],a:0,exp:"Empleados con suficientes permisos pueden crear accesos remotos que, si no están documentados y protegidos, suponen puertas traseras para atacantes."},
+  {t:"Riesgos corporativos",q:"¿Qué implica la exposición innecesaria de servicios como RDP o interfaces de administración de routers a Internet?",opts:["Mayor disponibilidad de la red","Acceso a servicios internos sin controles intermedios","Mejor redundancia del sistema","Más facilidad para auditorías"],a:1,exp:"Publicar servicios de administración (RDP, routers) sin controles intermedios amplía enormemente la superficie de ataque."},
+  {t:"Arquitectura moderna",q:"¿En qué se basa la arquitectura moderna de redes respecto a la identidad?",opts:["En la localización física del dispositivo","En la identidad de quien se comunica, no en su localización","En el tipo de cable utilizado","En el número de VLAN asignado"],a:1,exp:"La arquitectura moderna basa la seguridad en la identidad de quien se comunica, no en dónde se conecta físicamente."},
+  {t:"Arquitectura moderna",q:"¿Qué tecnología permite una red definida por software con topología dinámica?",opts:["STP","WPA3","SDN (Software Defined Network)","OSPF"],a:2,exp:"SDN (Software Defined Network) permite redes dinámicas que cambian su topología según las necesidades de la empresa."},
+  {t:"Arquitectura moderna",q:"¿Cómo son las redes en la arquitectura moderna en cuanto a su composición?",opts:["Una única red plana centralizada","Redes distribuidas, segmentadas y dinámicas","Redes exclusivamente físicas sin virtualización","Redes sin segmentación pero con cifrado total"],a:1,exp:"La arquitectura moderna usa redes distribuidas compuestas por varias subredes en distintas localizaciones, segmentadas y dinámicas."},
+  {t:"Segmentación y zonas",q:"¿Cuál es el concepto de zona de seguridad?",opts:["Red plana","Conjunto de recursos con el mismo nivel de confianza sujetos a políticas comunes","DMZ externa","VLAN única sin filtros"],a:1,exp:"Una zona de seguridad es un conjunto de recursos que comparten el mismo nivel de confianza y están sujetos a políticas de acceso comunes."},
+  {t:"Segmentación y zonas",q:"¿Qué permite diseñar adecuadamente las zonas de seguridad?",opts:["Eliminar todos los firewalls internos","Limitar la propagación de ataques y aplicar el mínimo privilegio","Aumentar el número de IPs disponibles","Reducir el coste de los switches"],a:1,exp:"Las zonas de seguridad limitan la propagación de ataques, aplican mínimo privilegio, facilitan auditorías y simplifican la gestión."},
+  {t:"Segmentación y zonas",q:"¿Qué zona de seguridad tiene nivel de confianza nulo?",opts:["Zona de administración","Zona IoT/SCADA","Zona de invitados","Zona de servidores corporativos"],a:2,exp:"La zona de invitados (WiFi para visitantes) tiene nivel de confianza nulo por tratarse de dispositivos externos no gestionados."},
+  {t:"Segmentación y zonas",q:"¿Ejemplo de zona de baja criticidad y alta exposición?",opts:["Servidores de backup","Interfaz de administración SCADA por VPN","Portales web públicos","Controladores de dominio"],a:2,exp:"Los portales web públicos son zona de baja criticidad + alta exposición, que requieren controles perimetrales estrictos."},
+  {t:"Segmentación y zonas",q:"Según la matriz de zonificación, ¿qué combinación requiere máxima protección?",opts:["Zona baja + baja exposición","Zona baja + alta exposición","Zona crítica + baja exposición","Zona crítica + alta exposición"],a:3,exp:"La combinación de criticidad alta + alta exposición requiere máxima protección: MFA, cifrado extremo a extremo, monitorización continua."},
+  {t:"Segmentación y zonas",q:"¿Qué se debe hacer con el flujo de información entre zonas distintas?",opts:["Permitirlo libremente para mayor eficiencia","Debe estar justificado, registrado, filtrado y monitorizado","Solo filtrarlo en la DMZ","Cifrarlo únicamente con TLS"],a:1,exp:"Todo flujo entre zonas debe estar justificado, registrado, filtrado y, si es posible, monitorizado."},
+  {t:"Segmentación y zonas",q:"¿Qué se debe limitar en las comunicaciones entre zonas de seguridad?",opts:["Exposición máxima","Acceso libre","Flujo al mínimo necesario","Logs completos"],a:2,exp:"El principio de mínimo necesario exige que dos zonas no puedan comunicarse libremente: solo lo estrictamente necesario."},
+  {t:"Segmentación y zonas",q:"¿Cada cuánto deben revisarse las zonas de seguridad diseñadas?",opts:["Nunca, una vez diseñadas son permanentes","Solo tras un incidente de seguridad","Periódicamente, adaptándolas a la evolución de la empresa y nuevos riesgos","Solo cuando se añaden nuevos dispositivos"],a:2,exp:"Las zonas deben revisarse periódicamente porque la empresa evoluciona y surgen nuevos riesgos que requieren adaptaciones."},
+  {t:"VLANs y subredes",q:"¿Qué tecnología de capa 2 permite crear múltiples dominios de broadcast sobre la misma red física?",opts:["ACL","VLANs","Subredes IP","QoS"],a:1,exp:"Las VLANs son tecnología de capa 2 que crean dominios de broadcast separados sobre la misma infraestructura física."},
+  {t:"VLANs y subredes",q:"¿Qué permite el etiquetado y la priorización de tráfico (QoS)?",opts:["Separar dominios de broadcast","Autenticar usuarios en la red","Priorizar y controlar el tráfico, por ejemplo para VoIP","Cifrar el tráfico entre subredes"],a:2,exp:"QoS permite priorizar paquetes VoIP, limitar ancho de banda a dispositivos no esenciales e insertar etiquetas en encabezados IP."},
+  {t:"VLANs y subredes",q:"¿Qué ataque puede saltarse la separación física por VLANs?",opts:["Man-in-the-middle","DDoS","VLAN hopping","ARP poisoning"],a:2,exp:"VLAN hopping es el ataque que permite saltarse la separación de VLANs, especialmente si los switches están mal configurados."},
+  {t:"VLANs y subredes",q:"¿De qué depende principalmente la seguridad de la segmentación física por VLAN?",opts:["Del cifrado TLS configurado en los servidores","De la configuración correcta de los switches de la organización","Del número de subredes IP definidas","Del firewall perimetral"],a:1,exp:"La segmentación por VLAN depende de la correcta configuración de los switches; si un atacante accede a ella, puede saltarse la protección."},
+  {t:"VLANs y subredes",q:"¿Cuándo se recomienda usar segmentación física total (switches dedicados por subred)?",opts:["En entornos domésticos","En redes de invitados","Cuando se requiere máxima seguridad y aislamiento extremo","En entornos de desarrollo y pruebas"],a:2,exp:"La segmentación física total (switches distintos por subred) se usa cuando se requiere máxima seguridad y aislamiento extremo de subredes."},
+  {t:"VLANs y subredes",q:"¿En qué enfoque de segmentación se definen distintas subredes lógicas sobre una misma red física?",opts:["Segmentación física total","Segmentación física con VLAN","Sin segmentación física + segmentación lógica","Segmentación con cable blindado STP"],a:2,exp:"Sin segmentación física + segmentación lógica: distintas subredes lógicas sobre la misma red física; útil para servidores coordinados con tolerancia a fallos."},
+  {t:"DMZ",q:"¿Qué es una DMZ?",opts:["Una zona de backups","Una red plana sin restricciones","Una zona entre la red interna y el exterior para alojar servicios expuestos","Una zona exclusiva para usuarios internos"],a:2,exp:"La DMZ es una zona entre la red interna y el exterior (Internet) para alojar servicios accesibles desde fuera sin comprometer la red interna."},
+  {t:"DMZ",q:"¿Cuál de los siguientes servicios es típico en una DMZ?",opts:["Servidor de backups internos","Controlador de dominio Active Directory","Servidor web público","Base de datos de RRHH"],a:2,exp:"Servidores web públicos, portales de clientes, servidores de correo y DNS externos son servicios típicos de la DMZ."},
+  {t:"DMZ",q:"En la DMZ, ¿qué NO se debe hacer?",opts:["Aplicar reglas estrictas de entrada y salida","Inspeccionar servicios con IPS y WAF","Alojar servidores de pruebas o desarrollo","Enviar logs a un lugar seguro de la red"],a:2,exp:"Nunca se debe usar la DMZ para alojar servidores de pruebas o desarrollo, ya que son entornos inseguros por naturaleza."},
+  {t:"DMZ",q:"¿Qué herramientas se usan para inspeccionar los servicios alojados en la DMZ?",opts:["DHCP Snooping y 802.1X","IPS y WAF","SIEM y NDR","QoS y STP"],a:1,exp:"Los servicios de la DMZ deben inspeccionarse mediante IPS (Intrusion Prevention System) y WAF (Web Application Firewall)."},
+  {t:"DMZ",q:"¿Qué relación debe existir entre la DMZ y la red interna?",opts:["Acceso bidireccional completo","La DMZ no debe tener acceso directo a la red interna","Acceso de la DMZ a la red interna solo por HTTPS","Ambas deben estar en la misma VLAN"],a:1,exp:"La DMZ no debe tener acceso directo a la red interna para evitar que un compromiso en la DMZ afecte a los sistemas internos."},
+  {t:"DMZ",q:"¿Por qué deben segmentarse los servidores dentro de la propia DMZ?",opts:["Para ahorrar IPs","Para que puedan comunicarse más rápido","Para que los servidores expuestos no se comuniquen entre sí libremente","Para facilitar el acceso de usuarios internos"],a:2,exp:"Segmentar la DMZ internamente evita que un servidor comprometido en la DMZ pueda atacar a otros servidores dentro de la misma zona."}
+];
+
+const STORAGE_KEY = 'quiz_ud0601_data';
+let questions = [];
+let current = 0;
+let answered = []; 
+let userChoices = [];
+let currentModeTitle = "Modo Completo";
+
+function shuffle(arr) {
+  let array = [...arr];
+  for(let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+// INICIALIZACIÓN
+function init() {
+  renderMenu();
+  const saved = localStorage.getItem(STORAGE_KEY);
+  
+  if (saved) {
+    try {
+      const data = JSON.parse(saved);
+      // Si el examen guardado ya se terminó, mostramos el menú limpio
+      if (data.current >= data.questions.length) {
+        localStorage.removeItem(STORAGE_KEY);
+        showMenuView();
+      } else {
+        // Hay un examen a medias
+        showMenuView(true); 
+      }
+    } catch(e) {
+      localStorage.removeItem(STORAGE_KEY);
+      showMenuView();
+    }
+  } else {
+    showMenuView();
+  }
+}
+
+// RENDERIZAR MENÚ
+function renderMenu() {
+  const container = document.getElementById('topics-container');
+  let html = `
+    <div class="topic-card card-all" onclick="startMode('ALL')">
+      <div class="topic-card-title">🚀 Simulacro Completo</div>
+      <div class="topic-card-count">Todas las ${ALL_Q.length} preguntas mezcladas</div>
+    </div>
+  `;
+
+  // Extraer temas únicos y contarlos
+  const topicsMap = {};
+  ALL_Q.forEach(q => {
+    if(!topicsMap[q.t]) topicsMap[q.t] = 0;
+    topicsMap[q.t]++;
+  });
+
+  const topics = Object.keys(topicsMap);
+  topics.forEach(t => {
+    html += `
+      <div class="topic-card" onclick="startMode('${t}')">
+        <div class="topic-card-title">${t}</div>
+        <div class="topic-card-count">${topicsMap[t]} preguntas</div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function showMenuView(hasSavedGame = false) {
+  document.getElementById('quiz-view').style.display = 'none';
+  document.getElementById('results-view').style.display = 'none';
+  document.getElementById('menu-view').style.display = 'block';
+  
+  const banner = document.getElementById('resume-banner');
+  banner.style.display = hasSavedGame ? 'block' : 'none';
+}
+
+function checkOverwrite() {
+  if (localStorage.getItem(STORAGE_KEY)) {
+    return confirm("Tienes un examen en curso guardado. Si empiezas uno nuevo se borrará. ¿Continuar?");
+  }
+  return true;
+}
+
+function startMode(mode) {
+  if (!checkOverwrite()) return;
+
+  let subset = [];
+  if (mode === 'ALL') {
+    subset = [...ALL_Q];
+    currentModeTitle = "Modo: Simulacro Completo";
+  } else {
+    subset = ALL_Q.filter(q => q.t === mode);
+    currentModeTitle = `Modo: ${mode}`;
+  }
+  
+  startNewQuiz(subset, currentModeTitle);
+}
+
+function startNewQuiz(qArray, title) {
+  questions = shuffle(qArray);
+  answered = new Array(questions.length).fill(null);
+  userChoices = new Array(questions.length).fill(null);
+  current = 0;
+  currentModeTitle = title || "Repaso de fallos";
+  
+  saveToLocal();
+  
+  document.getElementById('menu-view').style.display = 'none';
+  document.getElementById('results-view').style.display = 'none';
+  document.getElementById('quiz-view').style.display = 'block';
+  document.getElementById('current-mode-label').textContent = currentModeTitle;
+  
+  renderQ();
+}
+
+function resumeQuiz() {
+  const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+  questions = data.questions;
+  current = data.current;
+  answered = data.answered;
+  userChoices = data.userChoices || new Array(questions.length).fill(null);
+  currentModeTitle = data.modeTitle || "Examen en curso";
+  
+  document.getElementById('menu-view').style.display = 'none';
+  document.getElementById('results-view').style.display = 'none';
+  document.getElementById('quiz-view').style.display = 'block';
+  document.getElementById('current-mode-label').textContent = currentModeTitle;
+  
+  renderQ();
+}
+
+function saveToLocal() {
+  const data = { questions, current, answered, userChoices, modeTitle: currentModeTitle };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+// LOGICA DE PREGUNTAS
+function renderQ() {
+  const qArea = document.getElementById('q-area');
+  qArea.classList.remove('fade-in');
+  void qArea.offsetWidth; 
+  qArea.classList.add('fade-in');
+
+  const q = questions[current];
+  const total = questions.length;
+  const status = answered[current];
+  
+  document.getElementById('q-counter').textContent = `${current + 1} / ${total}`;
+  document.getElementById('prog').style.width = `${((current) / total) * 100}%`;
+  
+  let html = `
+    <div class="topic-badge">${q.t}</div>
+    <div class="q-text">${q.q}</div>
+    <div class="opt-list" id="opts">`;
+    
+  const letters = ['A','B','C','D'];
+  q.opts.forEach((o, i) => {
+    let cls = 'opt-btn';
+    let isCorrectOpt = (i === q.a);
+    let isUserChoice = (i === userChoices[current]);
+
+    if (status !== null) {
+      if (status === "skipped") {
+        if (isCorrectOpt) cls += ' correct'; 
+        else cls += ' disabled-neutral';
+      } else {
+        if (isCorrectOpt) cls += ' correct';
+        else if (isUserChoice) cls += ' wrong';
+        else cls += ' disabled-neutral';
+      }
+    }
+    
+    html += `<button class="${cls}" onclick="answer(${i})" ${status !== null ? 'disabled' : ''}><b>${letters[i]})</b> ${o}</button>`;
+  });
+  html += `</div>`;
+  
+  if (status !== null) {
+    let fbClass = status === true ? 'ok' : (status === "skipped" ? 'skipped' : 'fail');
+    let fbPrefix = status === true ? '✓ Correcto.' : (status === "skipped" ? '⏭️ Dejada en blanco.' : '✗ Incorrecto.');
+    html += `<div class="feedback show ${fbClass}">${fbPrefix} ${q.exp}</div>`;
+  }
+  
+  qArea.innerHTML = html;
+  
+  document.getElementById('btn-prev').disabled = (current === 0);
+  const btnNext = document.getElementById('btn-next');
+  const btnSkip = document.getElementById('btn-skip');
+  
+  if (current === total - 1) {
+    btnNext.textContent = status !== null ? 'Ver resultados →' : 'Ver resultados →';
+  } else {
+    btnNext.textContent = 'Siguiente →';
+  }
+
+  btnNext.disabled = (status === null);
+  btnSkip.style.display = (status === null) ? 'inline-flex' : 'none';
+}
+
+function answer(idx) {
+  if (answered[current] !== null) return; 
+  const q = questions[current];
+  answered[current] = (idx === q.a);
+  userChoices[current] = idx;
+  saveToLocal();
+  renderQ(); 
+}
+
+function skipQ() {
+  if (answered[current] !== null) return;
+  answered[current] = "skipped";
+  userChoices[current] = null;
+  saveToLocal();
+  renderQ();
+}
+
+function nextQ() {
+  if (current === questions.length - 1) {
+    current++; 
+    saveToLocal();
+    showResults();
+  } else {
+    current++;
+    saveToLocal();
+    renderQ();
+  }
+}
+
+function prevQ() {
+  if (current > 0) {
+    current--;
+    saveToLocal();
+    renderQ();
+  }
+}
+
+// RESULTADOS
+function showResults() {
+  document.getElementById('quiz-view').style.display = 'none';
+  const resView = document.getElementById('results-view');
+  resView.style.display = 'block';
+  
+  const total = questions.length;
+  const correct = answered.filter(a => a === true).length;
+  const wrong = answered.filter(a => a === false).length;
+  const skipped = answered.filter(a => a === "skipped").length;
+  
+  let rawScore = correct - (wrong / 3);
+  let note10 = (rawScore / total) * 10;
+  if (note10 < 0) note10 = 0; 
+  
+  let noteFormatted = note10.toFixed(2);
+  let msj = '';
+  if (note10 >= 9) msj = '¡Sobresaliente! Dominas el tema 🏆';
+  else if (note10 >= 7) msj = '¡Muy bien! Nivel notable 🌟';
+  else if (note10 >= 5) msj = 'Aprobado. Buen trabajo, pero repasa los fallos 👍';
+  else msj = 'Suspenso. Necesitas repasar la teoría 📚';
+
+  const hasWrongs = wrong > 0;
+
+  resView.innerHTML = `
+    <div class="results">
+      <div class="quiz-title" style="margin-bottom: 8px;">Resultados: ${currentModeTitle}</div>
+      <div class="quiz-meta" style="margin-bottom: 2rem;">Has completado el test</div>
+      
+      <div class="score-circle">
+        <div class="score-num">${noteFormatted}</div>
+        <div class="score-base">sobre 10</div>
+      </div>
+      
+      <div class="results-msg">${msj}</div>
+      
+      <div class="stats-grid">
+        <div class="stat-card c-ok"><div class="stat-val">${correct}</div><div class="stat-lbl">Aciertos</div></div>
+        <div class="stat-card c-fail"><div class="stat-val">${wrong}</div><div class="stat-lbl">Fallos</div></div>
+        <div class="stat-card c-skip"><div class="stat-val">${skipped}</div><div class="stat-lbl">En Blanco</div></div>
+        <div class="stat-card"><div class="stat-val">${total}</div><div class="stat-lbl">Total</div></div>
+      </div>
+      
+      <div class="action-grid">
+        ${hasWrongs ? `<button class="btn btn-primary" onclick="retryWrong()">Repasar solo las falladas</button>` : ''}
+        <button class="btn btn-outline" onclick="repeatCurrentMode()">Repetir este mismo test</button>
+        <button class="btn btn-outline" onclick="clearStorageAndShowMenu()" style="margin-top: 1rem;">🏠 Volver al Menú Principal</button>
+      </div>
+    </div>
+  `;
+}
+
+// UTILIDADES
+function retryWrong() {
+  const wrongQs = questions.filter((q, idx) => answered[idx] === false);
+  if (wrongQs.length > 0) {
+    startNewQuiz(wrongQs, "Repaso de Fallos");
+  }
+}
+
+function repeatCurrentMode() {
+  startNewQuiz([...questions], currentModeTitle);
+}
+
+function goToMenuConfirm() {
+  if(confirm("¿Quieres volver al menú? Tu progreso actual se quedará guardado y podrás continuarlo luego.")) {
+    showMenuView(true);
+  }
+}
+
+function clearStorageAndShowMenu() {
+  localStorage.removeItem(STORAGE_KEY);
+  showMenuView(false);
+}
+
+// Arrancar app
+init();
+</script>
+</body>
+</html>
